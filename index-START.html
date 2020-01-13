@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LocalStorage</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!--
+      Fish SVG Cred:
+      https://thenounproject.com/search/?q=fish&i=589236
+   -->
+
+   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 16 20" style="enable-background:new 0 0 16 16;" xml:space="preserve"><g><path d="M4.4,7.32C4.025,7.32,3.72,7.625,3.72,8S4.025,8.68,4.4,8.68S5.08,8.375,5.08,8S4.775,7.32,4.4,7.32z"/><path d="M8,0C3.582,0,0,3.582,0,8s3.582,8,8,8s8-3.582,8-8S12.418,0,8,0z M4.4,9.48C3.584,9.48,2.92,8.816,2.92,8   S3.584,6.52,4.4,6.52c0.816,0,1.48,0.664,1.48,1.48S5.216,9.48,4.4,9.48z M8,9.48C7.184,9.48,6.52,8.816,6.52,8S7.184,6.52,8,6.52   c0.816,0,1.48,0.664,1.48,1.48S8.816,9.48,8,9.48z M11.6,9.48c-0.816,0-1.48-0.664-1.48-1.48s0.664-1.48,1.48-1.48   c0.816,0,1.48,0.664,1.48,1.48S12.416,9.48,11.6,9.48z"/><circle cx="11.6" cy="8" r="0.68"/><path d="M8,7.32C7.625,7.32,7.32,7.625,7.32,8S7.625,8.68,8,8.68c0.375,0,0.68-0.305,0.68-0.68S8.375,7.32,8,7.32z"/></g><text x="0" y="31" fill="#000000" font-size="5px" font-weight="bold" font-family="'Helvetica Neue', Helvetica, Arial-Unicode, Arial, Sans-serif">Created by Igé Maulana</text><text x="0" y="36" fill="#000000" font-size="5px" font-weight="bold" font-family="'Helvetica Neue', Helvetica, Arial-Unicode, Arial, Sans-serif">from the Noun Project</text></svg>
+
+    <div class="wrapper">
+      <h2>TO DO</h2>
+      <p></p>
+      <ul class="plates">
+        <li>Loading Tapas...</li>
+      </ul>
+      <form class="add-items">
+        <input type="text" name="item" placeholder="Task" required />
+        <input type="submit" value="+ Add Task" />
+      </form>
+      <form class="remove-items">
+        <input type="submit" value="Delete All" id="delete-all" />
+        <input type="submit" value="Delete Selected" id="delete-selected" />
+      </form>
+    </div>
+
+    <script>
+      const addItems = document.querySelector(".add-items");
+      const itemsList = document.querySelector(".plates");
+      let items = JSON.parse(localStorage.getItem("items")) || [];
+      const deleteAll = document.querySelector("#delete-all");
+      const deleteSelected = document.querySelector("#delete-selected");
+
+      function addItem(e) {
+        e.preventDefault();
+        const text = this.querySelector("[name=item]").value;
+        const item = {
+          text: text,
+          done: false
+        };
+        items.push(item);
+        populateList(items, itemsList);
+        localStorage.setItem("items", JSON.stringify(items));
+        this.reset();
+      }
+
+      function populateList(plates = [], platesList) {
+        platesList.innerHTML = plates
+          .map((plate, i) => {
+            return `
+      <li>
+      <input type ="checkbox" data-index=${i} id="item${i}" ${
+              plate.done ? "checked" : ""
+            }/>
+        <label for="item${i}" data-index=${i} for=item${i}>${plate.text}</label>
+      </li>
+      `;
+          })
+          .join("");
+      }
+
+      function toggleDone(e) {
+        if (e.target.matches("input")) return;
+        const el = e.target;
+        const index = el.dataset.index;
+        items[index].done = !items[index].done;
+        localStorage.setItem("items", JSON.stringify(items));
+        populateList(items, itemsList);
+      }
+
+      function deleteSelectedItems(e) {
+        e.preventDefault();
+        const checkboxes = itemsList.querySelectorAll("input");
+        let checked = [];
+        checkboxes.forEach((item, i) => {
+          if (item.checked === true) {
+            checked.push(i);
+          }
+        });
+        items = items.filter(function(value, index) {
+          return checked.indexOf(index) == -1;
+        });
+
+        populateList(items, itemsList);
+        localStorage.setItem("items", JSON.stringify(items));
+      }
+
+      addItems.addEventListener("submit", addItem);
+      // event delegation - use a parent element that is ther eon page load to manage the child events if they are not loaded to start
+      itemsList.addEventListener("click", toggleDone);
+      populateList(items, itemsList);
+      deleteAll.addEventListener("click", () => {
+        localStorage.clear();
+        populateList([], itemsList);
+      });
+      deleteSelected.addEventListener("click", deleteSelectedItems);
+    </script>
+  </body>
+</html>
